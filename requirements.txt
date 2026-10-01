@@ -1,0 +1,24 @@
+# Core MetaTrader 5 Bridge
+MetaTrader5>=5.0.45
+
+# Deterministic AI Risk & Execution Supervisor
+typesafe-sdk>=0.7.2
+
+# Quantitative Modeling & Machine Learning
+lightgbm>=4.0.0
+xgboost>=2.0.0
+chronos-forecasting>=2.0.0
+torch>=2.2.0
+transformers>=4.40.0
+accelerate>=1.0.0
+
+# Mathematical, Data Processing & Typing
+pandas>=2.0.0
+numpy>=1.24.0
+scipy>=1.10.0
+pydantic>=2.10.0
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+
+# Terminal UI & Diagnostics
+rich>=13.0.0

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeSafe Jev + MT5 Quantitative Cockpit</title>
+  <meta name="description" content="Production quantitative trading dashboard with TypeSafe Jev System 1 supervisor, Chronos foundation forecasting, and real-time self-evaluation performance tracking.">
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand-logo">
+          <div class="pulse-indicator online" id="heartbeat-dot"></div>
+          <span class="brand-name">TypeSafe <span class="gradient-text">JevQuant</span></span>
+          <span class="version-tag">SYSTEM 1</span>
+        </div>
+        <div class="instrument-pill">
+          <span class="pill-sym" id="top-symbol">XAUUSDc</span>
+          <span class="pill-tf" id="top-timeframe">M5</span>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="live-status-bar">
+          <span class="status-label">STATUS:</span>
+          <span class="status-badge active" id="engine-status-badge">ONLINE & EVALUATING</span>
+          <span class="last-sync" id="last-sync-time">Syncing...</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="account-card">
+          <div class="acc-meta">
+            <span class="acc-server" id="acc-server">Exness-MT5Real34</span>
+            <span class="acc-login" id="acc-login">#253620432</span>
+          </div>
+          <div class="acc-balances">
+            <div class="acc-equity">
+              <span class="label">Equity:</span>
+              <span class="value" id="acc-equity">$1,178.49</span>
+            </div>
+            <div class="acc-margin">
+              <span class="label">Free Margin:</span>
+              <span class="value" id="acc-margin">$1,157.72</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-scan-now" title="Trigger instant analysis pass">
+          <span class="btn-icon">⚡</span> Scan Now
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="tab-cockpit" id="tab-btn-cockpit">
+        <span class="tab-icon">🛰️</span> Live Cockpit
+      </button>
+      <button class="tab-btn" data-tab="tab-track-record" id="tab-btn-track-record">
+        <span class="tab-icon">🏆</span> Strategy Track Record <span class="badge-count" id="badge-total-eval">0</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-diagnostics" id="tab-btn-diagnostics">
+        <span class="tab-icon">🧠</span> AI & Risk Diagnostics
+      </button>
+      <button class="tab-btn" data-tab="tab-settings" id="tab-btn-settings">
+        <span class="tab-icon">⚙️</span> Settings & Instruments
+      </button>
+    </nav>
+
+    <!-- Main Tab Content Area -->
+    <main class="main-content">
+
+      <!-- ================================================================= -->
+      <!-- TAB 1: LIVE COCKPIT (MARKET & TRADE SETUPS)                       -->
+      <!-- ================================================================= -->
+      <section class="tab-pane active" id="tab-cockpit">
+        
+        <!-- Live Target Asset Banner & Quick Switcher -->
+        <div class="asset-selector-ribbon">
+          <div class="asset-selector-label">
+            <span class="pulse-indicator online"></span>
+            <span>CURRENTLY EVALUATING:</span>
+          </div>
+          <div class="asset-buttons-group">
+            <button class="btn-asset-switch active" id="btn-asset-xau" data-sym="XAUUSD">
+              <span class="asset-icon">🪙</span>
+              <div class="asset-info">
+                <span class="asset-title">GOLD (XAUUSDc)</span>
+                <span class="asset-sub">Exness Metal • M5 Chart</span>
+              </div>
+            </button>
+            <button class="btn-asset-switch" id="btn-asset-btc" data-sym="BTCUSD">
+              <span class="asset-icon">₿</span>
+              <div class="asset-info">
+                <span class="asset-title">BITCOIN (BTCUSDc)</span>
+                <span class="asset-sub">Exness Crypto • M5 Chart</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Top Metrics Ribbon -->
+        <div class="metrics-grid">
+          <!-- Card 1: Live Market Price -->
+          <div class="card metric-card">
+            <div class="card-header">
+              <span class="card-title">Live Market Ticker</span>
+              <span class="badge badge-cyan" id="market-digits-badge">5-Digit</span>
+            </div>
+            <div class="ticker-display">
+              <div class="quote-side">
+                <span class="quote-label">BID</span>
+                <span class="quote-val quote-bid" id="ticker-bid">4149.49</span>
+              </div>
+              <div class="ticker-divider"></div>
+              <div class="quote-side">
+                <span class="quote-label">ASK</span>
+                <span class="quote-val quote-ask" id="ticker-ask">4149.73</span>
+              </div>
+            </div>
+            <div class="metric-footer">
+              <span>Spread: <strong id="ticker-spread-pips">24.0</strong> pips (<span id="ticker-spread-pts">240</span> pts)</span>
+              <span class="spread-indicator optimal" id="spread-indicator">Normal for Gold</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Quantitative Forecast -->
+          <div class="card metric-card">
+            <div class="card-header">
+              <span class="card-title">Quantitative Direction</span>
+              <span class="badge" id="direction-badge">NEUTRAL</span>
+            </div>
+            <div class="forecast-value-box">
+              <span class="forecast-direction-text" id="forecast-dir-text">NEUTRAL (0)</span>
+              <div class="forecast-meta">
+                <span>Exp Return: <strong id="forecast-return">+0.000%</strong></span>
+                <span>Confidence: <strong id="forecast-confidence">50.0%</strong></span>
+              </div>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" id="confidence-bar" style="width: 50%;"></div>
+            </div>
+            <div class="metric-footer">
+              <span>ML Tabular: <strong id="meta-tab-dir">0</strong></span>
+              <span>Chronos Prior: <strong id="meta-chr-dir">0</strong></span>
+            </div>
+          </div>
+
+          <!-- Card 3: Jev System 1 Supervisor -->
+          <div class="card metric-card">
+            <div class="card-header">
+              <span class="card-title">Jev Gatekeeper</span>
+              <span class="badge badge-amber" id="jev-status-badge">HOLD_STAND_DOWN</span>
+            </div>
+            <div class="jev-score-display">
+              <div class="jev-metric">
+                <span class="jev-val" id="jev-risk-prob">45.6%</span>
+                <span class="jev-sub">Risk Acceptable (Req &ge; 85%)</span>
+              </div>
+              <div class="jev-metric">
+                <span class="jev-val" id="jev-regime-score">3.18 / 5.0</span>
+                <span class="jev-sub">Volatility Regime</span>
+              </div>
+            </div>
+            <div class="metric-footer">
+              <span>Approval: <strong id="jev-approval-text" class="text-amber">STAND DOWN</strong></span>
+              <span id="session-window-text">London Overlap</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Strategy Self-Evaluation Snapshot -->
+          <div class="card metric-card">
+            <div class="card-header">
+              <span class="card-title">Strategy Win-Rate</span>
+              <span class="badge badge-green" id="kpi-winrate-badge">0.0%</span>
+            </div>
+            <div class="winrate-kpi-box">
+              <div class="kpi-big-num" id="kpi-winrate">0.0%</div>
+              <div class="kpi-record-text">
+                <span class="text-green" id="kpi-wins">0 Wins</span> - 
+                <span class="text-red" id="kpi-losses">0 Losses</span>
+              </div>
+            </div>
+            <div class="metric-footer">
+              <span>Total Pips: <strong id="kpi-net-pips">+0.0</strong></span>
+              <span>Profit Factor: <strong id="kpi-pf">0.00</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Master Trade Advisory Card (Dynamic Glowing Alert Box) -->
+        <div class="trade-card-wrapper" id="trade-card-wrapper">
+          <div class="trade-card stand-down" id="trade-card">
+            <div class="trade-card-header">
+              <div class="trade-card-tag" id="trade-card-tag">STAND DOWN - AWAITING SETUP</div>
+              <div class="trade-card-symbol" id="trade-card-sym">XAUUSDc (M5)</div>
+            </div>
+            
+            <div class="trade-card-body">
+              <div class="trade-main-col">
+                <span class="trade-action-badge" id="trade-action-badge">HOLD POSITION</span>
+                <span class="trade-card-desc" id="trade-card-desc">Market in consolidation or spread boundary active. Engine is monitoring every tick.</span>
+              </div>
+
+              <div class="trade-levels-grid" id="trade-levels-grid" style="display: none;">
+                <div class="level-box entry-box">
+                  <span class="level-label">ENTRY PRICE</span>
+                  <span class="level-val" id="level-entry">--</span>
+                </div>
+                <div class="level-box sl-box">
+                  <span class="level-label">STOP LOSS (SL)</span>
+                  <span class="level-val" id="level-sl">--</span>
+                  <span class="level-pips text-red" id="level-sl-pips">-- pips (1.5x ATR)</span>
+                </div>
+                <div class="level-box tp-box">
+                  <span class="level-label">TAKE PROFIT (TP)</span>
+                  <span class="level-val" id="level-tp">--</span>
+                  <span class="level-pips text-green" id="level-tp-pips">-- pips (3.0x ATR)</span>
+                </div>
+                <div class="level-box rr-box">
+                  <span class="level-label">RISK : REWARD</span>
+                  <span class="level-val text-cyan">1 : 2.0</span>
+                  <span class="level-pips">Vol: 0.01 Lots</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="rejection-reasons-box" id="rejection-reasons-box">
+              <span class="rejection-title">Engine Diagnostic Reasons:</span>
+              <ul class="rejection-list" id="rejection-list">
+                <li>Quantitative forecaster indicates NEUTRAL / Stand Down.</li>
+                <li>Jev risk_acceptable probability falls below safety threshold (85%).</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Price Action & Chronos Trajectory Grid -->
+        <div class="charts-row">
+          <div class="card chart-card">
+            <div class="card-header">
+              <span class="card-title">Live Price Action & Candle Activity</span>
+              <div class="chart-actions">
+                <button class="btn btn-sm active" id="btn-chart-5m">5M</button>
+                <button class="btn btn-sm" id="btn-chart-15m">15M</button>
+              </div>
+            </div>
+            <div class="chart-container" id="candle-chart-container">
+              <canvas id="candle-chart" width="700" height="260"></canvas>
+            </div>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="dot dot-green"></span> Bullish Candle</span>
+              <span class="legend-item"><span class="dot dot-red"></span> Bearish Candle</span>
+              <span class="legend-item"><span class="dot dot-cyan"></span> Live Ask</span>
+            </div>
+          </div>
+
+          <div class="card chart-card">
+            <div class="card-header">
+              <span class="card-title">Amazon Chronos Foundation Trajectory (GPU)</span>
+              <span class="badge badge-purple">Zero-Shot Distribution</span>
+            </div>
+            <div class="chart-container" id="chronos-chart-container">
+              <canvas id="chronos-chart" width="450" height="260"></canvas>
+            </div>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="dot dot-purple"></span> p90 Upper Bound</span>
+              <span class="legend-item"><span class="dot dot-cyan"></span> p50 Median Trajectory</span>
+              <span class="legend-item"><span class="dot dot-red"></span> p10 Lower Bound</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB 2: STRATEGY TRACK RECORD (WINS & LOSSES SCORECARD & TABLE)     -->
+      <!-- ================================================================= -->
+      <section class="tab-pane" id="tab-track-record">
+        
+        <div class="track-record-header">
+          <div>
+            <h2 class="section-heading">Strategy Performance & Historical Track Record</h2>
+            <p class="section-sub">Persistent audit log of all trade setups evaluated against actual market price action.</p>
+          </div>
+          <div class="filter-group">
+            <button class="btn btn-filter active" data-filter="ALL">All Setups</button>
+            <button class="btn btn-filter" data-filter="WON_TP">Won (TP)</button>
+            <button class="btn btn-filter" data-filter="LOST_SL">Lost (SL)</button>
+            <button class="btn btn-filter" data-filter="PENDING">Pending</button>
+          </div>
+        </div>
+
+        <!-- Strategy Performance KPIs -->
+        <div class="metrics-grid mb-4">
+          <div class="card metric-card">
+            <span class="card-title">Realized Win Rate</span>
+            <div class="kpi-huge-num text-green" id="tr-winrate">0.0%</div>
+            <span class="card-sub" id="tr-win-loss-count">0 Wins / 0 Losses</span>
+          </div>
+
+          <div class="card metric-card">
+            <span class="card-title">Total Net Pips Won</span>
+            <div class="kpi-huge-num text-cyan" id="tr-net-pips">+0.0</div>
+            <span class="card-sub">Cumulative Profit & Loss</span>
+          </div>
+
+          <div class="card metric-card">
+            <span class="card-title">Profit Factor</span>
+            <div class="kpi-huge-num text-purple" id="tr-profit-factor">0.00</div>
+            <span class="card-sub">Gross Wins / Gross Losses</span>
+          </div>
+
+          <div class="card metric-card">
+            <span class="card-title">Evaluated Signals</span>
+            <div class="kpi-huge-num text-amber" id="tr-total-trades">0</div>
+            <span class="card-sub"><span id="tr-pending-count">0</span> Currently Active / Pending</span>
+          </div>
+        </div>
+
+        <!-- Pips Equity Growth Curve -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <span class="card-title">Cumulative Performance Growth (Net Pips)</span>
+            <span class="badge badge-green">Self-Evaluating Curve</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="equity-chart" width="1200" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Searchable Historical Trades Table -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Historical Signals & Realized Outcomes</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <button class="btn btn-secondary btn-sm" id="btn-reset-history" title="Clear recorded signals to restart tracking from a clean slate" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 4px; border: 1px solid #334155; background: #1e293b; color: #94a3b8; cursor: pointer;">
+                ↺ Reset History
+              </button>
+              <span class="table-stats-pill" id="table-summary-pill">Showing 0 records</span>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="signals-table">
+              <thead>
+                <tr>
+                  <th>#ID</th>
+                  <th>Timestamp (UTC)</th>
+                  <th>Symbol</th>
+                  <th>Direction</th>
+                  <th>Entry Price</th>
+                  <th>Stop Loss</th>
+                  <th>Take Profit</th>
+                  <th>Status</th>
+                  <th>Realized Pips</th>
+                  <th>Return %</th>
+                </tr>
+              </thead>
+              <tbody id="signals-table-body">
+                <tr>
+                  <td colspan="10" class="text-center py-4 text-muted">Loading strategy trade records...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB 3: AI & RISK DIAGNOSTICS                                      -->
+      <!-- ================================================================= -->
+      <section class="tab-pane" id="tab-diagnostics">
+        <h2 class="section-heading">AI Models & Deterministic Guardrail Diagnostics</h2>
+        <p class="section-sub">Inspect feature weights, foundation model priors, and TypeSafe Jev System 1 parameters.</p>
+
+        <div class="diagnostics-grid">
+          <!-- LightGBM Feature Importance -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Technical Indicators & ML Inputs</span>
+              <span class="badge badge-cyan">Feature Extractor</span>
+            </div>
+            <div class="features-list" id="features-list">
+              <div class="feature-row">
+                <span class="feature-name">RSI (14-Period)</span>
+                <span class="feature-val" id="feat-rsi">45.0</span>
+              </div>
+              <div class="feature-row">
+                <span class="feature-name">Average True Range (ATR-14)</span>
+                <span class="feature-val" id="feat-atr">0.00095</span>
+              </div>
+              <div class="feature-row">
+                <span class="feature-name">MACD Normalized Histogram</span>
+                <span class="feature-val" id="feat-macd">-0.82</span>
+              </div>
+              <div class="feature-row">
+                <span class="feature-name">Tick Volume Rolling Z-Score</span>
+                <span class="feature-val" id="feat-volz">-0.45</span>
+              </div>
+              <div class="feature-row">
+                <span class="feature-name">5-Bar Log Return Lag</span>
+                <span class="feature-val" id="feat-ret5">+0.012%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- TypeSafe Jev System 1 Schema -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">TypeSafe Jev Supervisor Primitives</span>
+              <span class="badge badge-green">Typed Architecture</span>
+            </div>
+            <div class="code-box">
+              <pre><code>// TypeSafe System 1 Schema
+questions = {
+  "approved_action": Choice(
+    criteria=["EXECUTE_BUY", "EXECUTE_SELL", "HOLD_STAND_DOWN"]
+  ),
+  "risk_acceptable": Noul(
+    threshold=0.85 // Strict Gatekeeper
+  ),
+  "market_regime": Score(
+    scale=["calm", "normal", "elevated", "high", "extreme"]
+  )
+}</code></pre>
+            </div>
+            <div class="mt-3">
+              <p class="text-muted text-sm">
+                Jev enforces strict deterministic verification before any signal is approved. If the calibrated risk probability falls below 85% or contradicts quantitative ML, the trade is rejected.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- TAB 4: CONTROLS & INSTRUMENT SWITCHER                             -->
+      <!-- ================================================================= -->
+      <section class="tab-pane" id="tab-settings">
+        <h2 class="section-heading">Engine Controls & Quick Instrument Switcher</h2>
+        <p class="section-sub">Switch target trading symbols, timeframes, or pause/resume scanning instantly without restarting the server.</p>
+
+        <div class="settings-grid">
+          <!-- Quick Instrument Select -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Select Trading Instrument</span>
+            </div>
+            <div class="quick-symbols">
+              <button class="btn btn-symbol active" data-sym="XAUUSD">
+                <span class="sym-name">XAUUSD</span>
+                <span class="sym-desc">Gold vs US Dollar</span>
+              </button>
+              <button class="btn btn-symbol" data-sym="GBPUSD">
+                <span class="sym-name">GBPUSD</span>
+                <span class="sym-desc">British Pound vs Dollar</span>
+              </button>
+              <button class="btn btn-symbol" data-sym="EURUSD">
+                <span class="sym-name">EURUSD</span>
+                <span class="sym-desc">Euro vs Dollar</span>
+              </button>
+              <button class="btn btn-symbol" data-sym="BTCUSD">
+                <span class="sym-name">BTCUSD</span>
+                <span class="sym-desc">Bitcoin vs Dollar</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Timeframe & Scanning Controls -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Timeframe & Engine State</span>
+            </div>
+            <div class="control-section">
+              <label class="control-label">Analysis Timeframe:</label>
+              <div class="timeframe-buttons">
+                <button class="btn btn-tf" data-tf="M1">1M</button>
+                <button class="btn btn-tf active" data-tf="M5">5M</button>
+                <button class="btn btn-tf" data-tf="M15">15M</button>
+                <button class="btn btn-tf" data-tf="H1">1H</button>
+                <button class="btn btn-tf" data-tf="H4">4H</button>
+              </div>
+            </div>
+
+            <div class="control-section mt-4">
+              <label class="control-label">Engine Automation Mode:</label>
+              <div class="mode-toggles">
+                <button class="btn btn-mode active" id="btn-toggle-scan">
+                  <span class="status-indicator-dot green"></span> Live Scanning ACTIVE
+                </button>
+              </div>
+              <p class="text-muted text-sm mt-2">
+                Running in <strong>ADVISORY MODE</strong>: Signals, exact Stop Loss, and Take Profit levels are calculated and evaluated continuously, without unconfirmed broker orders.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer Status Banner -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span>MT5 Status: <strong class="text-green" id="footer-mt5-status">CONNECTED (Build 6230)</strong></span>
+        <span class="separator">|</span>
+        <span>Host Terminal: <strong id="footer-terminal-company">MetaQuotes / Exness</strong></span>
+      </div>
+      <div class="footer-right">
+        <span>Chronos Model: <strong>amazon/chronos-bolt-tiny (CUDA)</strong></span>
+        <span class="separator">|</span>
+        <span>Supervisor: <strong>TypeSafe Jev (Deterministic)</strong></span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
